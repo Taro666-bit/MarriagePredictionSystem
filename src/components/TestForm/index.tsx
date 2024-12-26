@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from "framer-motion";
-import { UserIcon, HeartIcon, SparklesIcon, ExclamationCircleIcon } from "@heroicons/react/24/outline";
+import { motion } from "framer-motion";
+import { UserIcon, HeartIcon } from "@heroicons/react/24/outline";
 import { LoadingSpinner } from "../LoadingSpinner";
 
 interface TestFormProps {
@@ -13,50 +13,24 @@ interface TestFormProps {
 export function TestForm({ onSubmit, isLoading }: TestFormProps) {
   const [name1, setName1] = useState('');
   const [name2, setName2] = useState('');
-  const [error, setError] = useState<string | null>(null);
-
-  const isValid = name1.length >= 2 && name2.length >= 2;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isValid) {
-      setError('请输入有效的姓名（至少2个字符）');
-      return;
-    }
-    setError(null);
-    
-    try {
-      await onSubmit({ name1, name2 });
-      const resultElement = document.getElementById('result-section');
-      if (resultElement) {
-        resultElement.scrollIntoView({ behavior: 'smooth' });
-      }
-    } catch (err) {
-      setError('提交失败，请稍后重试');
-    }
+    if (!name1 || !name2) return;
+
+    // 直接提交，不等待滚动
+    await onSubmit({ name1, name2 });
   };
 
   return (
-    <section className="py-20 bg-gradient-to-b from-blue-50/50">
-      <div className="container">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-12"
-        >
-          <h2 className="text-3xl font-bold mb-4">开始测试</h2>
-          <p className="text-gray-600 mb-2">输入你们的姓名，探索你们的契合度</p>
-          <p className="text-sm text-gray-500">示例：张三、李四</p>
-        </motion.div>
-
+    <section className="py-20">
+      <div className="container max-w-4xl">
         <motion.form
-          className="max-w-2xl mx-auto"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.2 }}
           onSubmit={handleSubmit}
+          className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
         >
           <div className="flex items-center gap-4 mb-8">
             <div className="flex-1">
@@ -102,29 +76,15 @@ export function TestForm({ onSubmit, isLoading }: TestFormProps) {
             </div>
           </div>
 
-          <AnimatePresence>
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="flex items-center gap-2 text-red-500 mb-4 justify-center"
-              >
-                <ExclamationCircleIcon className="w-5 h-5" />
-                <span>{error}</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
           <motion.button
             type="submit"
-            disabled={isLoading || !isValid}
-            className={`w-full md:w-auto px-8 py-3 rounded-lg
+            disabled={isLoading || !name1 || !name2}
+            className={`w-full md:w-auto px-8 py-3 rounded-xl
               font-semibold transition-all flex items-center justify-center gap-2 mx-auto
-              ${isValid ? 'bg-primary text-white hover:bg-primary/90' : 'bg-gray-200 text-gray-500'}
+              ${name1 && name2 ? 'bg-primary text-white hover:bg-primary/90' : 'bg-gray-200 text-gray-500'}
               disabled:opacity-50`}
-            whileHover={isValid ? { scale: 1.02 } : {}}
-            whileTap={isValid ? { scale: 0.98 } : {}}
+            whileHover={name1 && name2 ? { scale: 1.02 } : {}}
+            whileTap={name1 && name2 ? { scale: 0.98 } : {}}
           >
             {isLoading ? (
               <>
@@ -133,7 +93,7 @@ export function TestForm({ onSubmit, isLoading }: TestFormProps) {
               </>
             ) : (
               <>
-                <SparklesIcon className="w-5 h-5" />
+                <HeartIcon className="w-5 h-5" />
                 <span>开始分析</span>
               </>
             )}

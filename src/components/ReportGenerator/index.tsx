@@ -25,6 +25,7 @@ export function ReportGenerator({ result }: ReportGeneratorProps) {
 
       // 生成截图
       const canvas = await html2canvas(resultElement as HTMLElement, {
+        // @ts-ignore scale 属性确实存在，但类型定义可能过时
         scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',

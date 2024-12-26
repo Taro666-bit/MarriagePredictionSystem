@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Hero } from '@/components/Hero';
 import { Features } from '@/components/Features';
 import { TestForm } from '@/components/TestForm';
@@ -11,20 +11,9 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<PredictionResult | null>(null);
 
-  // 监听结果变化，当有新结果时滚动到结果区域
-  useEffect(() => {
-    if (result) {
-      // 给一个小延时确保 DOM 已经渲染
-      setTimeout(() => {
-        const resultElement = document.getElementById('result-section');
-        if (resultElement) {
-          resultElement.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 100);
-    }
-  }, [result]);
-
   const handleSubmit = async (data: { name1: string; name2: string }) => {
+    if (isLoading) return;
+    
     setIsLoading(true);
     try {
       const response = await fetch('/api/predict', {
@@ -32,10 +21,7 @@ export default function Home() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name1: data.name1,
-          name2: data.name2
-        }),
+        body: JSON.stringify(data),
       });
       
       if (!response.ok) {
@@ -43,15 +29,9 @@ export default function Home() {
       }
 
       const result = await response.json();
-      // 确保在结果中包含用户输入的名字
-      setResult({
-        ...result,
-        name1: data.name1,
-        name2: data.name2
-      });
+      setResult(result);
     } catch (error) {
       console.error('Error:', error);
-      // 这里可以添加错误提示
     } finally {
       setIsLoading(false);
     }
@@ -62,12 +42,16 @@ export default function Home() {
     // 滚动到表单区域
     const formElement = document.querySelector('form');
     if (formElement) {
-      formElement.scrollIntoView({ behavior: 'smooth' });
+      const y = formElement.getBoundingClientRect().top + window.pageYOffset - 100;
+      window.scrollTo({
+        top: y,
+        behavior: 'smooth'
+      });
     }
   };
 
   return (
-    <main>
+    <main className="min-h-screen bg-gradient-to-b from-white to-gray-50">
       <Hero />
       <Features />
       <TestForm onSubmit={handleSubmit} isLoading={isLoading} />
