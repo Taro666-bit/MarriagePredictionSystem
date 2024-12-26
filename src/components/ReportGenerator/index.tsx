@@ -3,12 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { DocumentTextIcon } from '@heroicons/react/24/outline';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 import type { PredictionResult } from '@/types';
-import { AnalysisDetail } from '../AnalysisDetail';
-import { ScoreLevel } from '../ScoreLevel';
-import { ScoreChart } from '../ScoreChart';
 
 interface ReportGeneratorProps {
   result: PredictionResult;
@@ -20,6 +15,10 @@ export function ReportGenerator({ result }: ReportGeneratorProps) {
   const generatePDF = async () => {
     setIsGenerating(true);
     try {
+      // 动态导入 html2canvas 和 jspdf
+      const html2canvas = (await import('html2canvas')).default;
+      const { default: jsPDF } = await import('jspdf');
+
       // 找到分析结果的容器元素
       const resultElement = document.querySelector('.pdf-content');
       if (!resultElement) {
