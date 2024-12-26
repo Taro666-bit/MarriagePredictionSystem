@@ -5,4 +5,6 @@ export interface PredictionResult {
     title: string;
     text: string;
   }>;
+  name1: string;
+  name2: string;
 } 
