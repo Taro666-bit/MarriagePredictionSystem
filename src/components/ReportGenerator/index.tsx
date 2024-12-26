@@ -6,6 +6,9 @@ import { DocumentTextIcon } from '@heroicons/react/24/outline';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import type { PredictionResult } from '@/types';
+import { AnalysisDetail } from '../AnalysisDetail';
+import { ScoreLevel } from '../ScoreLevel';
+import { ScoreChart } from '../ScoreChart';
 
 interface ReportGeneratorProps {
   result: PredictionResult;
