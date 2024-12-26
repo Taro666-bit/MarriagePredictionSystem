@@ -1,13 +1,9 @@
 'use client';
 
-import { Fragment } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
-import { motion } from 'framer-motion';
-import { XMarkIcon, ShareIcon, DocumentDuplicateIcon } from '@heroicons/react/24/outline';
-import { SharePreview } from '../SharePreview';
+import { Fragment, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { XMarkIcon } from '@heroicons/react/24/outline';
 import type { PredictionResult } from '@/types';
-import { Toast } from '../Toast';
-import { useState } from 'react';
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -21,101 +17,70 @@ interface ShareModalProps {
 }
 
 export function ShareModal({ isOpen, onClose, shareData, result }: ShareModalProps) {
-  const [showToast, setShowToast] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const canShare = typeof navigator !== 'undefined' && !!navigator.share;
 
-  const handleCopy = async () => {
+  const handleShare = async () => {
     try {
-      await navigator.clipboard.writeText(`${shareData.text}\n查看详情：${shareData.url}`);
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 2000);
-    } catch (err) {
-      console.error('复制失败:', err);
+      if (canShare) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareData.text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
+    } catch (error) {
+      console.error('分享失败:', error);
     }
   };
 
   return (
-    <>
-      <Transition appear show={isOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-50" onClose={onClose}>
-          <Transition.Child
-            as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
+    <AnimatePresence>
+      {isOpen && (
+        <Fragment>
+          {/* 背景遮罩 */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+          />
+
+          {/* 模态框 */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 
+                     w-full max-w-md bg-white rounded-2xl shadow-xl z-50 p-6"
           >
-            <div className="fixed inset-0 bg-black/25 backdrop-blur-sm" />
-          </Transition.Child>
-
-          <div className="fixed inset-0 overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-4">
-              <Transition.Child
-                as={Fragment}
-                enter="ease-out duration-300"
-                enterFrom="opacity-0 scale-95"
-                enterTo="opacity-100 scale-100"
-                leave="ease-in duration-200"
-                leaveFrom="opacity-100 scale-100"
-                leaveTo="opacity-0 scale-95"
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">分享结果</h3>
+              <button
+                onClick={onClose}
+                className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 shadow-xl transition-all">
-                  <div className="flex items-center justify-between mb-4">
-                    <Dialog.Title className="text-lg font-medium">
-                      分享结果
-                    </Dialog.Title>
-                    <button
-                      onClick={onClose}
-                      className="rounded-lg p-2 hover:bg-gray-100 transition-colors"
-                    >
-                      <XMarkIcon className="w-5 h-5" />
-                    </button>
-                  </div>
-
-                  <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                    <p className="text-gray-600 whitespace-pre-line">
-                      {shareData.text}
-                    </p>
-                  </div>
-
-                  <div className="mb-6">
-                    <SharePreview result={result} />
-                  </div>
-
-                  <div className="flex gap-4">
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={handleCopy}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 
-                               bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-                    >
-                      <DocumentDuplicateIcon className="w-5 h-5" />
-                      复制内容
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => {
-                        if (navigator.share) {
-                          navigator.share(shareData);
-                        }
-                      }}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 
-                               bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                    >
-                      <ShareIcon className="w-5 h-5" />
-                      系统分享
-                    </motion.button>
-                  </div>
-                </Dialog.Panel>
-              </Transition.Child>
+                <XMarkIcon className="w-5 h-5" />
+              </button>
             </div>
-          </div>
-        </Dialog>
-      </Transition>
-      <Toast show={showToast} message="复制成功！" />
-    </>
+
+            <div className="space-y-4">
+              <p className="text-gray-600">
+                {shareData.text}
+              </p>
+
+              <button
+                onClick={handleShare}
+                className="w-full py-3 rounded-xl bg-primary text-white 
+                         hover:bg-primary/90 transition-colors"
+              >
+                {canShare ? '分享' : copied ? '已复制' : '复制分享文本'}
+              </button>
+            </div>
+          </motion.div>
+        </Fragment>
+      )}
+    </AnimatePresence>
   );
 }
